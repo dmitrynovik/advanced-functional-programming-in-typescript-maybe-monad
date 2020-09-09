@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { EmployeeRepository } from "./employee.repository";
+import { Maybe } from './maybe';
 
 @Component({
   selector: 'app-root',
@@ -18,25 +19,18 @@ export class AppComponent implements OnInit {
     this.repository = new EmployeeRepository();
 
     findEmployeeButtonEl.addEventListener("click", () => {
-      const supervisorName = this.getSupervisorName(employeeIdInputEl.value);
-      if (supervisorName) {
-          searchResultsEl.innerText = `Supervisor name: ${supervisorName}`;
-      } else {
-          searchResultsEl.innerText = "Could not find supervisor for given id";
-      }
-  });
-}
+      const supervisorName = this.getSupervisorName(Maybe.fromValue(employeeIdInputEl.value));
+      searchResultsEl.innerText = `Supervisor name: ${supervisorName.getOrElse("could not find")}`;
+    });
+  }
 
-  getSupervisorName(enteredId: string) {
-      if (enteredId) {
-          const employee = this.repository.findById(parseInt(enteredId));
-          if (employee && employee.supervisorId) {
-              const supervisor = this.repository.findById(employee.supervisorId);
-              if (supervisor) {
-                  return supervisor.name;
-              }
-          }
-      }
-  }   
+  getSupervisorName(maybeEnteredId: Maybe<string>): Maybe<string> {
+    return maybeEnteredId
+        .flatMap(employeeIdString => Maybe.fromValue(parseInt(employeeIdString))) // parseInt can fail
+        .flatMap(employeeId => this.repository.findById(employeeId))
+        .flatMap(employee => employee.supervisorId)
+        .flatMap(supervisorId => this.repository.findById(supervisorId))
+        .map(supervisor => supervisor.name);
+  }
 }
 

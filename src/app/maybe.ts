@@ -19,18 +19,10 @@ export class Maybe<T> {
     getOrElse = (defaultValue: T) => this.value === null ? defaultValue : this.value;
 
     map<R>(f: (wrapped: T) => R): Maybe<R> {
-        if (this.value === null) {
-            return Maybe.none<R>();
-        } else {
-            return Maybe.fromValue(f(this.value));
-        }
+        return (this.value === null) ? Maybe.none<R>() : Maybe.fromValue(f(this.value));
     }
 
     flatMap<R>(f: (wrapped: T) => Maybe<R>): Maybe<R> {
-        if (this.value === null) {
-            return Maybe.none<R>();
-        } else {
-            return f(this.value);
-        }
+        return (this.value === null) ? Maybe.none<R>() : f(this.value);
     }
 }
